@@ -4,6 +4,11 @@ from pickle import load
 from nltk.translate.bleu_score import corpus_bleu
 from keras.models import load_model
 
+from keras.preprocessing.sequence import pad_sequences
+from PIL import Image as pil_image
+from matplotlib import pyplot as plt
+
+
 
 def word_for_id(integer, tokenizer):
     """
@@ -12,13 +17,13 @@ def word_for_id(integer, tokenizer):
     :param tokenizer: 一个预先产生的keras.preprocessing.text.Tokenizer
     :return: 输入整数对应的英文单词
     """
-    for word, index in tokenizer.word_index.items():
+    for word, index in tokenizer.word_index.items(): # items()函数返回可遍历的（键，值）元组数据
         if index == integer:
             return word
     return None
 
 
-def generate_caption(model, tokenizer, photo_feature, max_length = 40):
+def generate_caption(model, tokenizer, photo_feature, max_length=40):
     """
     根据输入的图像特征产生图像的标题
     :param model: 预先训练好的图像标题生成神经网络模型
@@ -27,7 +32,46 @@ def generate_caption(model, tokenizer, photo_feature, max_length = 40):
     :param max_length: 训练数据中最长的图像标题的长度
     :return: 产生的图像的标题
     """
-    pass
+
+    in_text = 'startseq' # 保存字符串结果
+    for i in range(max_length):
+        sequence = tokenizer.texts_to_sequences([in_text])
+        sequence = pad_sequences(sequence, max_length)[0] # 输入的数字序列
+        output = model.predict([photo_feature, sequence.reshape(1, max_length)])
+        integer = np.argmax(output)
+        word = word_for_id(integer, tokenizer)
+        if word is None:
+            break
+        in_text = in_text + ' ' + word
+        if word == 'endseq':
+            break
+    return in_text
+
+def generate_caption_run():
+    # 加载测试集
+    filename = './Flickr_8k.testImages.txt'
+    test = util.load_ids(filename)
+
+    # 图像特征
+    test_features = util.load_photo_features('./features.pkl', test)
+    print('Photos: test=%d' % len(test_features))
+
+    # 加载模型
+    model = load_model('./model_8.h5')
+
+    tokenizer = load(open('./tokenizer.pkl', 'rb'))
+
+    pic = pil_image.open('../Flicker8k_Dataset/280706862_14c30d734a.jpg', 'r')
+    plt.imshow(pic)
+    plt.show()
+    caption = generate_caption(model, tokenizer, test_features['280706862_14c30d734a'], 40)
+    caption = caption.split(' ')[1:-1]
+    caption = ' '.join(caption)
+    return caption
+
+if __name__ == '__main__':
+    result = generate_caption_run()
+    print('result is：' + result)
 
 
 def evaluate_model(model, captions, photo_features, tokenizer, max_length = 40):
