@@ -69,9 +69,7 @@ def generate_caption_run():
     caption = ' '.join(caption)
     return caption
 
-if __name__ == '__main__':
-    result = generate_caption_run()
-    print('result is：' + result)
+
 
 
 def evaluate_model(model, captions, photo_features, tokenizer, max_length = 40):
@@ -92,6 +90,57 @@ def evaluate_model(model, captions, photo_features, tokenizer, max_length = 40):
             第四个元素为权重为(0.25, 0.25, 0.25, 0.25)的ＢＬＥＵ分数
 
     """
-    pass
+    actual, predicted = list(), list()
+
+    num = 0
+    for key, caption_list in captions.items():
+        # 生成描述
+        yhat = generate_caption(model, tokenizer, photo_features[key], max_length)
+
+        # 存储真实值和预测值
+        references = [d.split() for d in caption_list]
+        actual.append(references)
+        predicted.append(yhat.split())
+
+        num += 1
+        print('第%d张测试图像标题生成！' % num)
+
+    # 计算BLEU得分
+    bleu1 = corpus_bleu(actual, predicted, weights=(1, 0, 0, 0))
+    bleu2 = corpus_bleu(actual, predicted, weights=(0.5, 0.5, 0, 0))
+    bleu3 = corpus_bleu(actual, predicted, weights=(0.33, 0.33, 0.33, 0))
+    bleu4 = corpus_bleu(actual, predicted, weights=(0.25, 0.25, 0.25, 0.25))
+
+    print('BLEU_1: %f' % bleu1)
+    print('BLEU_2: %f' % bleu2)
+    print('BLEU_3: %f' % bleu3)
+    print('BLEU_4: %f' % bleu4)
+
+    return bleu1, bleu2, bleu3, bleu4
 
 
+# evaluate_model(model, captions, photo_features, tokenizer, max_length = 40):
+def evaluate_model_run():
+
+    # 加载模型
+    model = load_model('./model_8.h5')
+
+    # 加载测试数据
+    test_fig_name = util.load_ids('./Flickr_8k.testImages.txt')
+    captions = util.load_clean_captions('./descriptions.txt', test_fig_name)
+
+    # 加载图像特征
+    photo_features = util.load_photo_features('./features.pkl', test_fig_name)
+
+
+    # 加载tokenizer
+    tokenizer = load(open('./tokenizer.pkl', 'rb'))
+
+    bleu1, bleu2, bleu3, bleu4 = evaluate_model(model, captions, photo_features, tokenizer, max_length=40)
+
+
+if __name__ == '__main__':
+    # result = generate_caption_run()
+    # print('result is：' + result)
+
+    evaluate_model_run()
