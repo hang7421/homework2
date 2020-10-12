@@ -10,7 +10,7 @@ from pickle import load
 from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
 import util # 注意task3和task4中的util的函数名称不一致，task3中按照视频上修改了名称，task4中保持不变
-from numpy import array
+from numpy import array, concatenate
 
 
 def create_batches(desc_list, photo_features, tokenizer, max_len, vocab_size=7378):
@@ -100,11 +100,27 @@ def data_generator(captions, photo_features, tokenizer, max_len):
     """
     # loop for ever over images
     while 1:
+        flag = 0
+        num = 1
         for key, desc_list in captions.items():
             # retrieve the photo feature
             photo_feature = photo_features[key][0] # photo_features[key]为二维numpy数组（由vgg网络执行model.predict()时产生的二维numpy数组）
-            in_img, in_seq, out_word = create_batches(desc_list, photo_feature, tokenizer, max_len)
-            yield [[in_img, in_seq], out_word]
+            if flag == 0:
+                in_img, in_seq, out_word = create_batches(desc_list, photo_feature, tokenizer, max_len)
+                flag = 1
+            else:
+                in_img_new, in_seq_new, out_word_new = create_batches(desc_list, photo_feature, tokenizer, max_len)
+
+                in_img = concatenate((in_img, in_img_new), axis=0)
+
+                in_seq = concatenate((in_seq, in_seq_new), axis=0)
+
+                out_word = concatenate((out_word, out_word_new), axis=0)
+                num += 1
+                if num == 25:
+                    flag = 0
+                    num = 1
+                    yield [[in_img, in_seq], out_word]
 
 
 def caption_model(vocab_size, max_len):
@@ -163,9 +179,10 @@ def train():
     # define the model
     model = caption_model(vocab_size, max_len)
     # train the model, run epochs manually and save after each epoch
-    epochs = 10
-    steps = len(train_captions)
+    epochs = 20
+    steps = len(train_captions) / 25
     for i in range(epochs):
+        print('第%d个epoch开始：' % (i+1))
         # create the data generator
         generator = data_generator(train_captions, train_features, tokenizer, max_len)
         # fit for one epoch
