@@ -1,0 +1,197 @@
+1. 配置源：
+	conda config --add channels https://pypi.tuna.tsinghua.edu.cn/simple
+	conda config --set show_channel_urls yes
+	其它的源：
+		阿里云：http://mirrors.aliyun.com/pypi/simple/
+
+		中国科技大学 https://pypi.mirrors.ustc.edu.cn/simple/
+
+		华中理工大学：http://pypi.hustunique.com/
+
+		山东理工大学：http://pypi.sdutlinux.org/
+
+		豆瓣：http://pypi.douban.com/simple/
+
+		
+		中科大源：conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/main/
+
+			  conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/free/
+
+			  conda config --add channels https://mirrors.ustc.edu.cn/anaconda/cloud/conda-forge/
+
+			  conda config --add channels https://mirrors.ustc.edu.cn/anaconda/cloud/msys2/
+
+			  conda config --add channels https://mirrors.ustc.edu.cn/anaconda/cloud/bioconda/
+
+			  conda config --add channels https://mirrors.ustc.edu.cn/anaconda/cloud/menpo/
+	查看源：conda config --show-sources
+	移除源： conda config --remove channels https://pypi.tuna.tsinghua.edu.cn/simple
+
+2. 创建环境
+	在指定路径下创建环境：
+		conda create  -p E:/application/Anaconda/Anaconda/envs/tf  python=3.6
+
+	更新conda:
+		conda update -n base -c defaults conda
+
+3. anaconda迁移
+	导出yml的优点：也可以使用 -export 选项生成一个 environment.yml 文件，以在 不同的平台和操作系统之间 复现项目环境。
+	 	spec list 文件和 environment.yml 文件之间的区别在于： environment.yml 文件不针对特定操作系统，并且使用YAML格式。 
+		environment.yml 仅列出了软件包名称，由 conda 基于软件包的名称构建环境。 另一个区别是 -export 还包括使用pip安装的软件包，
+		而 spec list 则没有。
+	导出yml: conda env export > environment.yml
+	重现环境：
+		1. 更新anaconda到最新版本
+			conda update -n base -c defaults conda	
+		2. conda env create -f environment.yml
+		conda env create -f tf.yml
+		问题：python无法定位程序输入点，如何解决？
+			用一台新电脑装tensorflow的时候报错：无法定位程序输入点OPENSSL_sk_new_reserve于动态链接库
+			解决：把Anaconda/DLLS 目录下的libssl-1_1-x64 dlls文件复制到 Anaconda/Library/bin 目录下就好了，具体目录到自己的安装目录找哦。
+
+4.安装tensorflow1.8.0(无需安装cuda和cudnn)
+	conda install tensorflow-gpu=1.8.0
+		注意：使用conda install 安装会自动安装cudnn和cudatoolkit
+
+5. 离线安装pytorch
+	conda install --offline pytorch-0.4.1-py36_cuda90_cudnn7he774522_1.tar.bz2
+
+conda操作
+在Anaconda中conda可以理解为一个工具，也是一个可执行命令，其核心功能是包管理与环境管理。所以对虚拟环境进行创建、删除等操作需要使用conda命令。
+
+conda 本地环境常用操作
+#获取版本号
+conda --version 或 conda -V
+
+#检查更新当前conda
+conda update conda
+
+#查看当前存在哪些虚拟环境
+conda env list 或 conda info -e
+
+#查看--安装--更新--删除包
+
+conda list：
+conda search package_name# 查询包
+conda install package_name
+conda install package_name=1.5.0
+conda update package_name
+conda remove package_name
+
+conda创建虚拟环境：
+使用 conda create -n your_env_name python=X.X（2.7、3.6等），anaconda 命令创建python版本为X.X、名字为your_env_name的虚拟环境。your_env_name文件可以在Anaconda安装目录envs文件下找到。 指定python版本为2.7，注意至少需要指定python版本或者要安装的包， 在不指定python版本时，自动安装最新python版本。
+
+#创建名为your_env_name的环境
+conda create --name your_env_name
+#创建制定python版本的环境
+conda create --name your_env_name python=2.7
+conda create --name your_env_name python=3.6
+#创建包含某些包（如numpy，scipy）的环境
+conda create --name your_env_name numpy scipy
+#创建指定python版本下包含某些包的环境
+conda create --name your_env_name python=3.6 numpy scipy
+
+激活虚拟环境：
+使用如下命令即可激活创建的虚拟环境
+
+#Linux
+source activate your_env_name
+
+#Windows
+activate your_env_name
+
+退出虚拟环境：
+使用如下命令即可退出创建的虚拟环境
+
+#Linux
+source deactivate your_env_name
+
+#Windows
+deactivate env_name
+
+删除虚拟环境：
+conda remove -n your_env_name --all
+
+conda remove --name your_env_name --all
+
+复制某个环境
+conda create --name new_env_name --clone old_env_name
+
+在指定环境中管理包
+conda list -n your_env_name
+conda install --name myenv package_name 
+conda remove --name myenv package_name
+
+使用国内 conda 软件源加速
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+$ conda config --set show_channel_urls yes
+
+使用国内pip软件源加速,更多详情请点击：pip的使用和清华镜像源的设置
+1.临时设置方法：
+
+可以在使用pip的时候加在最后面加上参数 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+例如：pip install jieba -i https://pypi.tuna.tsinghua.edu.cn/simple  # jieba 是一个包
+
+2.永久设置方法：
+
+pip install pip -U
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+配置完之后就可以像平常一样安装包，速度提升几十倍
+
+例如：pip install jieba
+
+切换为阿里云进行下载
+
+pip install pandas -i http://mirrors.aliyun.com/pypi/simple/   --trusted-host mirrors.aliyun.com
+pip install pandas -i http://mirrors.aliyun.com/pypi/simple/
+
+
+阿里云 http://mirrors.aliyun.com/pypi/simple/
+豆瓣(douban) http://pypi.douban.com/simple/ 
+清华大学 https://pypi.tuna.tsinghua.edu.cn/simple/
+中国科学技术大学 http://pypi.mirrors.ustc.edu.cn/simple/
+
+
+
+Jupyter Notebook出现kernel error
+当时用Anaconda安装多个版本的Python的时候，时常由于安装和卸载多次Python导致Juoyter notebook不可用。常常导致如下结果
+解决办法
+运行python -m ipykernel install --user重新安装内核
+如果有多个内核，先运行conda create -n python2 python=2，为Python2.7设置Anaconda变量，在Anacoda下使用activate pyhton2切换python环境
+重启jupyter notebook即可
+小技巧
+jupyter kernelspec list 查看安装的内核和位置
+进入安装内核目录打开kernel.jason文件，查看Python编译器的路径
+
+作者：o啵子o
+链接：https://www.jianshu.com/p/de39b46a978d
+来源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+
+
+使用指令“pyinstaller -F xxx.py”生成exe文件。
+
+
+
+#添加第三方conda源
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/msys2/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/menpo/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+
+# 添加科大conda镜像
+conda config --prepend channels http://mirrors.ustc.edu.cn/anaconda/pkgs/free/
+conda config --prepend channels https://mirrors.ustc.edu.cn/anaconda/pkgs/main/
+
+# 添加清华conda镜像
+conda config --prepend channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+
+	
+
