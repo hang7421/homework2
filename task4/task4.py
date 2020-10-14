@@ -1,5 +1,5 @@
 from keras.utils import plot_model
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.layers import Input
 from keras.layers import Dense
 from keras.layers import LSTM
@@ -10,7 +10,8 @@ from pickle import load
 from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
 import util # 注意task3和task4中的util的函数名称不一致，task3中按照视频上修改了名称，task4中保持不变
-from numpy import array, concatenate
+from numpy import array, concatenate, random
+import re
 
 
 def create_batches(desc_list, photo_features, tokenizer, max_len, vocab_size=7378):
@@ -85,7 +86,7 @@ def create_batches(desc_list, photo_features, tokenizer, max_len, vocab_size=737
 
 
 # data generator, intended to be used in a call to model.fit_generator()
-def data_generator(captions, photo_features, tokenizer, max_len):
+def data_generator(captions, photo_features, tokenizer, max_len, batch_size):
     """创建一个训练数据生成器, 用于传入模型训练函数的第一个参数model.fit_generator(generator,...)
 
     Args:
@@ -102,8 +103,12 @@ def data_generator(captions, photo_features, tokenizer, max_len):
     while 1:
         flag = 0
         num = 1
-        for key, desc_list in captions.items():
+        # print(type(captions.keys()))
+        keys = list(captions.keys()) # 将dic_keys转换为list
+        random.shuffle(keys) # 对keys进行随机打乱
+        for key in keys:
             # retrieve the photo feature
+            desc_list = captions[key]
             photo_feature = photo_features[key][0] # photo_features[key]为二维numpy数组（由vgg网络执行model.predict()时产生的二维numpy数组）
             if flag == 0:
                 in_img, in_seq, out_word = create_batches(desc_list, photo_feature, tokenizer, max_len)
@@ -117,7 +122,7 @@ def data_generator(captions, photo_features, tokenizer, max_len):
 
                 out_word = concatenate((out_word, out_word_new), axis=0)
                 num += 1
-                if num == 25:
+                if num == batch_size:
                     flag = 0
                     num = 1
                     yield [[in_img, in_seq], out_word]
@@ -180,11 +185,16 @@ def train():
     model = caption_model(vocab_size, max_len)
     # train the model, run epochs manually and save after each epoch
     epochs = 20
-    steps = len(train_captions) / 25
+    batch_size = 25
+    steps = len(train_captions) / batch_size
+    model_name = './model_19.h5'
+    epoch_num = int(re.findall('./model_(.*?).h5', model_name)[0]) # 已经训练过的epoch次数
+
+    model = load_model(model_name)
     for i in range(epochs):
-        print('第%d个epoch开始：' % (i+1))
+        print('第%d个epoch开始：' % (i + epoch_num + 1))
         # create the data generator
-        generator = data_generator(train_captions, train_features, tokenizer, max_len)
+        generator = data_generator(train_captions, train_features, tokenizer, max_len, batch_size)
         # fit for one epoch
         model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1) # 通过generator采用yield一次一次产生数据
         # save model
