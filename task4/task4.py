@@ -198,6 +198,6 @@ def train():
         # fit for one epoch
         model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1) # 通过generator采用yield一次一次产生数据
         # save model
-        model.save('model_' + str(i) + '.h5')
+        model.save('model_' + str(i + epoch_num + 1) + '.h5')
 
 train()
