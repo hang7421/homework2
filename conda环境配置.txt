@@ -56,6 +56,9 @@
 5. 离线安装pytorch
 	conda install --offline pytorch-0.4.1-py36_cuda90_cudnn7he774522_1.tar.bz2
 
+6.安装moviepy
+	pip install moviepy==0.2.3.5
+
 conda操作
 在Anaconda中conda可以理解为一个工具，也是一个可执行命令，其核心功能是包管理与环境管理。所以对虚拟环境进行创建、删除等操作需要使用conda命令。
 
